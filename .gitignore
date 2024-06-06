@@ -1,0 +1,4 @@
+.vscode
+all
+*.txt
+! *.txt
