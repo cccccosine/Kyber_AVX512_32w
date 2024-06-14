@@ -47,17 +47,10 @@ int crypto_kem_keypair(uint8_t *pk,
 
   // /* Value z for pseudo-random output on reject */
   randombytes(buf, KYBER_SYMBYTES*32);
-  // for (int i = 0; i < KYBER_SYMBYTES*32; i++) {
-  //   buf[i] = 1;
-  // }
+
   for(int i = 0; i < 32; i++) {
     memcpy(sk+(i+1)*(KYBER_SECRETKEYBYTES/32)-KYBER_SYMBYTES, buf+i*KYBER_SYMBYTES, KYBER_SYMBYTES);
   }
-
-  // for (int i = 0; i < KYBER_SECRETKEYBYTES/32; i++) {
-  //   printf("%6d", sk[i]);
-  //   if (i%16 == 15) printf("\n");
-  // }
 
   free(sk_32);
 
@@ -69,25 +62,11 @@ int crypto_kem_enc(uint8_t *ct,
                    uint8_t *ss,
                    uint8_t *pk)
 {
-  /* To adapt to the shake128x4, the size of buf is defined as 7*168 bytes, which is enough to include 16*32 bytes.
-     Need additional space for the concatenation with H(pk), so the total length is 16*32*2 bytes. */
   uint8_t buf[KYBER_INDCPA_MSGBYTES*32*2];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES*32];
-  /* Will store the pk whose format is polyvec * 16 || publicseed * 16, i.e., separating the public key and public seed */
-  // uint8_t *pk_sepa_32 = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //16个单独pk需要变成polyvec+publicseed的形式
-  //已不再需要pk_sepa_32，因为indcpa_keypair最后已经将32-way pk全部分离
-
-  // TODO: 后续完善解释
-  // 代码改变原理：原Kyber的randombyte+hash_h是为了产生随机数，现将原
-  // Kyber中的hash_h转化为等效的absorb_once+squeezeblocks,因为hash_h
-  // 函数内部也就是一个absorb_once+KeccakF1600,squeezeblocks()就是将
-  // KeccakF1600进行封装，运算blocks次的KeccakF1600
 
   randombytes(buf + KYBER_SYMBYTES*32, KYBER_SYMBYTES*32);
-  // for (int i = 0; i < KYBER_SYMBYTES*32; i++) {
-  //   buf[i + KYBER_SYMBYTES*32] = 1;
-  // }
 
   /* Don't release system RNG output */
   //产生16个H(m)，并且留出下一步进行单路连接H(pk)需要的空间
@@ -157,11 +136,6 @@ int crypto_kem_enc(uint8_t *ct,
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);
 
-  // for (int i = 0; i < KYBER_INDCPA_BYTES; i++) {
-  //   printf("%5d, ", ct[i]);
-  //   if (i % 16 == 15) printf("\n");
-  // }
-
   /* overwrite coins in kr with H(c) */
   for(int i = 0; i < 4; i++) {
     hash_hx8(kr+(16*i+1)*KYBER_SYMBYTES, 
@@ -182,11 +156,6 @@ int crypto_kem_enc(uint8_t *ct,
              ct+KYBER_CIPHERTEXTBYTES/32*(i*8+7),
              KYBER_CIPHERTEXTBYTES/32);
   }
-  // for (int i = 0; i < 2048; i++) {
-  //   printf("%6d", buf[i]);
-  //   // printf("%6d", kr[i]);
-  //   if (i%16 == 15) printf("\n");
-  // }
   
   /* hash concatenation of pre-k and H(c) to k */
   for(int i = 0; i < 4; i++) {
