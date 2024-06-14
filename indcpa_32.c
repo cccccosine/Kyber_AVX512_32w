@@ -501,7 +501,6 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16-1)], int transposed)
 
 void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],     
                     uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]
-                    // uint16_t pkpvprint[KYBER_INDCPA_PUBLICKEYBYTES]
                     )
 {
   unsigned int i;
@@ -513,16 +512,7 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
   polyvec_32 a[KYBER_K], aseq[KYBER_K], t[KYBER_K], skpv, skpvseq, tpv, e, eseq, pkpv, pkpvseq;
 
-  randombytes(buf+KYBER_SYMBYTES*32, KYBER_SYMBYTES*32);  //只需要生成一半的随机数并放在后半部分的内存中，之后hash_gx8从后半部分开始取，生成的数从头开始存
-  // printf("indcpa_keygen--randombytes1:");
-  // for(int i = 0; i < KYBER_SYMBYTES*16; i++) {
-  //   printf("%d,", *(buf + KYBER_SYMBYTES*16 + i));
-  // }
-  // printf("\n");
-
-  // for(i = 0; i < KYBER_SYMBYTES*32; i++) {
-  //   buf[i+KYBER_SYMBYTES*32] = 1;
-  // }
+  randombytes(buf+KYBER_SYMBYTES*32, KYBER_SYMBYTES*32);
 
   for(i = 0; i < 4; i++) {
     hash_gx8(buf+16*i*KYBER_SYMBYTES, 
@@ -543,44 +533,9 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
              buf+KYBER_SYMBYTES*32+KYBER_SYMBYTES*(i*8+7),
              KYBER_SYMBYTES);
   }
-  // printf("indcpa_keygen--hashgx4-1:");
-  // for(int i = 0; i < KYBER_SYMBYTES*32*2; i++) {
-  //   printf("%d,", *(buf + i));
-  //   if (i % 16 == 15) printf("\n");
-  // }
-  // printf("\n");
-
-  // for (int i = 0; i < KYBER_K; i++) {
-  //   for (j = 0; j < KYBER_K; j++) {
-  //     for(k = 0; k < KYBER_N; k++){
-  //       for(p = 0; p < 16; p++) {
-  //         a[i].vec[j].coeffs[k*16+p] = 19;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // for(int i = 0; i < 2*KYBER_SYMBYTES*16; i++) {
-  //   buf[i] = 1;
-  // }
 
   gen_a(a, publicseed);
   matrix_formseqto32(a, t, aseq);
-  // printf("indcpa_keygen--gen_a:");
-  // for (int i = 0; i < KYBER_K; i++) {
-  //   for (int j = 0; j < KYBER_K; j++) {
-  //     for(int k = 0; k < KYBER_N; k++){
-  //       for(int p = 0; p < 32; p++) {
-  //         printf("%5d,", aseq[i].vec[j].coeffs[k*32+p]);
-  //         if (p % 16 == 15) printf("\n");
-  //       }
-  //       // printf("\n");
-  //     }
-  //     printf("\n////////////////////////////////\n");
-  //   }
-  //   printf("\n*******************************\n");
-  // }
-  // printf("\n");
 
 #ifdef KYBER_90S  //not changed
 #define NOISE_NBLOCKS ((KYBER_ETA1*KYBER_N/4)/AES256CTR_BLOCKBYTES) /* Assumes divisibility */
@@ -606,26 +561,9 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_formseqto16(&skpv, &tpv, &skpvseq);
   polyvec_formseqto16(&e, &tpv, &eseq);  
 #elif KYBER_K == 3 
-  // for (int j = 0; j < KYBER_K; j++) {
-  //   for(int k = 0; k < 256; k++) {
-  //     for(int p = 0; p < 16; p++) {
-  //       skpv.vec[j].coeffs[k*16+p] = 19;
-  //       e.vec[j].coeffs[k*16+p] = 19;
-  //     }
-  //   }
-  // }
   poly_getnoise_eta1_8x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, e.vec+1, e.vec+2, pkpv.vec+0, pkpv.vec+1, noiseseed, 0, 1, 2, 3, 4, 5, 6, 7);
   polyvec_formseqto32(&skpv, &tpv, &skpvseq);
   polyvec_formseqto32(&e, &tpv, &eseq);
-  // for (int j = 0; j < KYBER_K; j++) {
-  //   for(int k = 0; k < KYBER_N; k++){
-  //     for (int p = 0; p < 32; p++) {
-  //       printf("%5d,", skpvseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("\n\n");
-  // }
 #elif KYBER_K == 4    //not changed
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, skpv.vec+3, noiseseed,  0, 1, 2, 3);
   poly_getnoise_eta1_4x(e.vec+0, e.vec+1, e.vec+2, e.vec+3, noiseseed, 4, 5, 6, 7);
@@ -636,17 +574,6 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_reduce(&skpvseq);
   polyvec_ntt(&eseq);
 
-  // for (int j = 0; j < KYBER_K; j++) {
-  //   for(int k = 0; k < 256; k++) {
-  //     for(int p = 0; p < 32; p++) {
-  //       printf("%6d,", eseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("\n/////////////////////////////\n");
-  // }
-  // printf("\n");
-
   // matrix-vector multiplication
   for(i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpvseq.vec[i], &aseq[i], &skpvseq);
@@ -655,16 +582,6 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
   polyvec_add(&pkpvseq, &pkpvseq, &eseq);
   polyvec_reduce(&pkpvseq);
-  // for (int j = 0; j < 3; j++) {
-  //   for(int k = 0; k < 256; k++) {
-  //     for(int p = 0; p < 32; p++) {
-  //       printf("%6d,", pkpvseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("\n/////////////////////////////\n");
-  // }
-  // printf("\n");
 
   pack_sk(skseq, &skpvseq);
   pack_pk(pkseq, &pkpvseq);
@@ -674,26 +591,6 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   for(i = 0; i < 32; i++) {
     memcpy(pk+KYBER_POLYVECBYTES+KYBER_INDCPA_PUBLICKEYBYTES/32*i, publicseed+KYBER_SYMBYTES*2*i, KYBER_SYMBYTES);
   }
-  
-  // for (int i = 0; i < KYBER_INDCPA_SECRETKEYBYTES; i++) {
-  //   printf("%5d, ", sk[i]);
-  //   if (i % 16 == 15) printf("\n");
-  // }
-
-  // for(i = 0; i < KYBER_K; i++) {
-  //   // for(j = 0; j < KYBER_N; j++) {
-  //   for(j = 0; j < 384; j++) {
-  //     for(k = 0; k < 16; k++) {
-  //       // skpvprint[i*KYBER_N+j] = skpv.vec[i].coeffs[j];
-  //       // pkpvprint[(i*KYBER_N+j)*16+k] = skpvseq.vec[i].coeffs[j*16+k];
-  //       // pkpvprint[(i*KYBER_N+j)*16+k] = pkpvseq.vec[i].coeffs[j*16+k];
-  //       // pkpvprint[(i*384+j)*16+k] = sk[(i*384+j)*16+k];
-  //       pkpvprint[(i*384+j)*16+k] = pk[(i*384+j)*16+k];
-  //       // pkpvprint[i*KYBER_N+j] = e.vec[i].coeffs[j];
-  //       // pkpvprint[i*KYBER_N+j] = a[1].vec[i].coeffs[j];
-  //     }
-  //   }
-  // }
 
 
   free(pkseq);
@@ -707,8 +604,6 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
                 const uint8_t m[KYBER_INDCPA_MSGBYTES*32*2],
                 uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                 uint8_t coins[KYBER_SYMBYTES*(32*2-1)]
-                // int16_t pkpvprint[KYBER_K*KYBER_N*16],
-                // int16_t vprint[KYBER_N*16]
                 )
 {
   unsigned int i;
@@ -720,54 +615,19 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   polyvec_32 sp, spseq, tpv, pkpvseq, ep, epseq, at[KYBER_K], t[KYBER_K], atseq[KYBER_K], b;
   poly_32 v, k, epp, tp, eppseq;
 
-  // for(int i = 0; i < 3*192; i++) {
-  //   for(int j = 0; j < 16; j++) {
-  //     pkseq[i*32+j*2] = pk[j*3*384+i*2];
-  //     pkseq[i*32+j*2+1] = pk[j*3*384+1+i*2];
-  //   }
-  // }
-
   for (i = 0; i < 32; i++) {
     memcpy(seed+2*KYBER_SYMBYTES*i, pk+KYBER_INDCPA_PUBLICKEYBYTES/32*i+KYBER_POLYVECBYTES, KYBER_SYMBYTES);
   }
 
   pk_formseqto32(pk, tpk, pkseq);
   unpack_pk(&pkpvseq, pkseq);
-  // for (int j = 0; j < 3; j++) {
-  //   for(int k = 0; k < 256; k++) {
-  //     for(int p = 0; p < 32; p++) {
-  //       printf("%6d,", pkpvseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("\n/////////////////////////////\n");
-  // }
-  // printf("\n");
 
   msg_formseqto32(m, mseq);
-  // for (int i = 0; i < 1024; i++) {
-  //   printf("%5d", mseq[i]);
-  //   if (i%16 == 15) printf("\n");
-  // }
 
   poly_frommsg_32(&k, mseq);
 
   gen_at(at, seed);
   matrix_formseqto32(at, t, atseq);
-  // for (int i = 0; i < KYBER_K; i++) {
-  //   for (int j = 0; j < KYBER_K; j++) {
-  //     for(int k = 0; k < KYBER_N; k++){
-  //       for(int p = 0; p < 32; p++) {
-  //         printf("%5d,", atseq[i].vec[j].coeffs[k*32+p]);
-  //         if (p % 16 == 15) printf("\n");
-  //       }
-  //       // printf("\n");
-  //     }
-  //     printf("\n////////////////////////////////\n");
-  //   }
-  //   printf("\n*******************************\n");
-  // }
-  // printf("\n");
 
 #ifdef KYBER_90S
 #define NOISE_NBLOCKS ((KYBER_ETA1*KYBER_N/4)/AES256CTR_BLOCKBYTES) /* Assumes divisibility */
@@ -795,36 +655,10 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   poly_getnoise_eta1122_4x(sp.vec+0, sp.vec+1, ep.vec+0, ep.vec+1, coins, 0, 1, 2, 3);
   poly_getnoise_eta2_4x(&epp, coins, 4);
 #elif KYBER_K == 3
-  // for (j = 0; j < KYBER_K; j++) {
-  //   for(l = 0; l < KYBER_N; l++) {
-  //     for(p = 0; p < 16; p++) {
-  //       sp.vec[j].coeffs[l*16+p] = 21;
-  //       ep.vec[j].coeffs[l*16+p] = 21;
-  //       epp.coeffs[l*16+p] = 21;
-  //     }
-  //   }
-  // }
   poly_getnoise_eta1_8x(sp.vec+0, sp.vec+1, sp.vec+2, ep.vec+0, ep.vec+1, ep.vec+2, &epp, b.vec+0, coins, 0, 1, 2 ,3, 4, 5, 6, 7);
   polyvec_formseqto32(&sp, &tpv, &spseq);
   polyvec_formseqto32(&ep, &tpv, &epseq);
   poly_formseqto32(&epp, &tp, &eppseq);
-  // for (int j = 0; j < KYBER_K; j++) {
-  //   for(int k = 0; k < KYBER_N; k++){
-  //     for (int p = 0; p < 32; p++) {
-  //       printf("%5d,", epseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 32 == 31) printf("\n");
-  //     }
-  //   }
-  //   printf("////////////////////////////\n\n");
-  // }
-
-  // for(int k = 0; k < KYBER_N; k++){
-  //   for (int p = 0; p < 32; p++) {
-  //     printf("%5d,", eppseq.coeffs[k*32+p]);
-  //     if (p % 16 == 15) printf("\n");
-  //   }
-  // }
-  // printf("////////////////////////////\n\n");
 #elif KYBER_K == 4
   poly_getnoise_eta1_4x(sp.vec+0, sp.vec+1, sp.vec+2, sp.vec+3, coins, 0, 1, 2, 3);
   poly_getnoise_eta1_4x(ep.vec+0, ep.vec+1, ep.vec+2, ep.vec+3, coins, 4, 5, 6, 7);
@@ -833,15 +667,6 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
 #endif
 
   polyvec_ntt(&spseq);
-  // for (int j = 0; j < KYBER_K; j++) {
-  //   for(int k = 0; k < KYBER_N; k++){
-  //     for (int p = 0; p < 32; p++) {
-  //       printf("%5d,", spseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("////////////////////////////\n\n");
-  // }
 
   // matrix-vector multiplication
   for(i=0;i<KYBER_K;i++)
@@ -857,32 +682,8 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   polyvec_reduce(&b);
   poly_reduce(&v);
 
-  // for (int j = 0; j < 3; j++) {
-  //   for(int k = 0; k < 256; k++){
-  //     for (int p = 0; p < 32; p++) {
-  //       printf("%6d,", b.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("////////////////////////////\n\n");
-  // }
-
-  // for(int l = 0; l < KYBER_N; l++){
-  //   for (int p = 0; p < 32; p++) {
-  //     // printf("%6d,", v.coeffs[l*32+p]);
-  //     printf("%6d,", k.coeffs[l*32+p]);
-  //     if (p % 16 == 15) printf("\n");
-  //   }
-  // }
-  // printf("////////////////////////////\n\n");
-
   pack_ciphertext(cseq, &b, &v);
   cipher_formseqfrom32(cseq, tc, c);
-
-  // for (int i = 0; i < 128*32; i++) {
-  //   printf("%5d, ", cseq[3*320*32+i]);
-  //   if (i % 16 == 15) printf("\n");
-  // }
 
   free(cseq);
   free(tc);
@@ -907,11 +708,6 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32*2],
 
   cipher_formseqto32(c, tc, cseq);
 
-  // for (int i = 0; i < 128*32; i++) {
-  //   printf("%5d, ", cseq[3*320*32+i]);
-  //   if (i % 16 == 15) printf("\n");
-  // }
-
   unpack_ciphertext(&b, &v, cseq);
 
   sk_formseqto32(sk, tsk, skseq);
@@ -924,37 +720,8 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32*2],
   poly_sub(&mp, &v, &mp);
   poly_reduce(&mp);
 
-  // for (int j = 0; j < KYBER_K; j++) {
-  //   for(int k = 0; k < KYBER_N; k++){
-  //     for (int p = 0; p < 32; p++) {
-  //       printf("%6d,", b.vec[j].coeffs[k*32+p]);
-  //       // printf("%6d,", skpvseq.vec[j].coeffs[k*32+p]);
-  //       if (p % 16 == 15) printf("\n");
-  //     }
-  //   }
-  //   printf("////////////////////////////\n\n");
-  // }
-
-  // for(int l = 0; l < KYBER_N; l++){
-  //   for (int p = 0; p < 32; p++) {
-  //     printf("%6d,", v.coeffs[l*32+p]);
-  //     // printf("%6d,", mp.coeffs[l*32+p]);
-  //     if (p % 16 == 15) printf("\n");
-  //   }
-  // }
-  // printf("////////////////////////////\n\n");
-
-  // for(int j = 0; j < KYBER_N*16; j++) {
-  //    vprint[j] = mp.coeffs[j];
-  // }
-
   poly_tomsg_32(mseq, &mp);
   msg_formseqfrom32(mseq, m);
-
-  // for (int i = 0; i < 1024; i++) {
-  //   printf("%5d", mseq[i]);
-  //   if (i%16 == 15) printf("\n");
-  // }
 
   free(cseq);
   free(tc);
