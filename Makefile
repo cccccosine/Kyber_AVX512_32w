@@ -15,6 +15,8 @@ HEADERS= consts_32.h ntt_32.h params.h align.h cpucycles.h speed_print.h fq.inc 
 all: $(HEADERS) $(SOURCES) main.c randombytes.c 
 	$(CC) $(CFLAGS) $(SOURCES) main.c randombytes.c -o main
 
+test_vectors: $(HEADERS) $(SOURCES) test_vectors.c
+	$(CC) $(CFLAGS) $(SOURCES) test_vectors.c -o test_vectors
 
 .PHONY: clean
 
