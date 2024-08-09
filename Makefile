@@ -12,7 +12,7 @@ HEADERS= consts_32.h ntt_32.h params.h align.h cpucycles.h speed_print.h fq.inc 
 		 reduce.h cbd.h fips202.h fips202x8.h indcpa_32.h poly_32.h polyvec_32.h \
 		 randombytes.h rejsample.h symmetric.h clocks.h kem_32.h verify_32.h
 		 
-all: $(HEADERS) $(SOURCES) main.c randombytes.c 
+main: $(HEADERS) $(SOURCES) main.c randombytes.c 
 	$(CC) $(CFLAGS) $(SOURCES) main.c randombytes.c -o main
 
 test_vectors: $(HEADERS) $(SOURCES) test_vectors.c
